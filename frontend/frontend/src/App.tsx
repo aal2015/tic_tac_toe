@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import Game from "./pages/Game";
+import Lobby from "./pages/Lobby";
 import AuthPage from "./pages/AuthPage";
-import { getSession } from "./services/nakama";
+import { getSession, getAccountInfo } from "./services/nakama";
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
@@ -21,7 +21,7 @@ function App() {
   return (
     <>
       {isAuth ? (
-        <Game />
+        <Lobby />
       ) : (
         <AuthPage onLogin={() => setIsAuth(true)} />
       )}
