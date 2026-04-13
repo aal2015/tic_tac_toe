@@ -3,7 +3,7 @@ import { login, register } from "../services/nakama";
 
 type Mode = "login" | "register";
 
-const AuthPage = ({ onLogin }: { onLogin: () => void }) => {
+const AuthPage = () => {
     const [mode, setMode] = useState<Mode>("login");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -14,7 +14,6 @@ const AuthPage = ({ onLogin }: { onLogin: () => void }) => {
         if (password.length < 8) return "Password must be at least 4 characters";
         return "";
     };
-
 
     const handleSubmit = async () => {
         const validationError = validate();
@@ -33,7 +32,6 @@ const AuthPage = ({ onLogin }: { onLogin: () => void }) => {
                 console.log("Register:", username);
             }
 
-            onLogin();
         } catch (err) {
             console.log(err);
             setError("Something went wrong");

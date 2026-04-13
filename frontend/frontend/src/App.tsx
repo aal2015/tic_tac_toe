@@ -1,25 +1,18 @@
-import { useEffect, useState } from "react";
-import Lobby from "./pages/Lobby";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
 import AuthPage from "./pages/AuthPage";
 import { isAuthenticated } from "./services/nakama";
 
-
 function App() {
-  const [isAuth, setIsAuth] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    setIsAuth(isAuthenticated());
-  }, []);
+    if (isAuthenticated()) {
+      navigate("/lobby");
+    }
+  }, [navigate]);
 
-  return (
-    <>
-      {isAuth ? (
-        <Lobby />
-      ) : (
-        <AuthPage onLogin={() => setIsAuth(true)} />
-      )}
-    </>
-  );
+  return <AuthPage />;
 }
 
 export default App;
