@@ -5,10 +5,10 @@ const client = new Client("defaultkey", "127.0.0.1", "7350", false);
 
 let socket: Socket | null = null;
 
-// ✅ Helper to convert username → email
+// Helper to convert username → email
 const toEmail = (username: string) => `${username}@game.com`;
 
-// ✅ LOGIN
+// LOGIN
 export const login = async (
     username: string,
     password: string
@@ -33,13 +33,13 @@ export const login = async (
     }
 };
 
-// ✅ REGISTER
+// REGISTER
 export const register = async (
     username: string,
     password: string
 ): Promise<Session> => {
     console.log(toEmail(username), password);
-    
+
     try {
         const session = await client.authenticateEmail(
             toEmail(username),
@@ -66,18 +66,27 @@ export const register = async (
     }
 };
 
-// ✅ GET SESSION
+// GET ACCOUNT INFO
+export const getAccountInfo = async (session: any) => {
+    const account = await client.getAccount(session);
+
+    console.log(account);
+
+    return account;
+};
+
+// GET SESSION
 export const getSession = (): Session | null => {
     const data = localStorage.getItem("session");
     return data ? (JSON.parse(data) as Session) : null;
 };
 
-// ✅ GET SOCKET
+// GET SOCKET
 export const getSocket = (): Socket | null => {
     return socket;
 };
 
-// ✅ LOGOUT
+// LOGOUT
 export const logout = () => {
     localStorage.removeItem("session");
     socket = null;

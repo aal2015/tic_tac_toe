@@ -7,16 +7,16 @@ function App() {
   const [isAuth, setIsAuth] = useState(false);
 
   useEffect(() => {
-  const session = getSession();
+    const session = getSession();
 
-  if (!session || session.expires_at! * 1000 < Date.now()) {
-    localStorage.removeItem("session");
-    setIsAuth(false);
-    return;
-  }
+    if (!session || session.expires_at! * 1000 < Date.now()) {
+      localStorage.removeItem("session");
+      setIsAuth(false);
+      return;
+    }
 
-  setIsAuth(true);
-}, []);
+    setIsAuth(true);
+  }, []);
 
   return (
     <>
