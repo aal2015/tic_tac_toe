@@ -66,6 +66,21 @@ export const register = async (
     }
 };
 
+// CHECK IF AUTHENTICATED
+export const isAuthenticated = () => {
+    const session = getSession();
+
+    if (!session) return false;
+
+    const isValid = session.expires_at! * 1000 > Date.now();
+
+    if (!isValid) {
+        localStorage.removeItem("session");
+    }
+
+    return isValid;
+};
+
 // GET ACCOUNT INFO
 export const getAccountInfo = async (session: any) => {
     const account = await client.getAccount(session);

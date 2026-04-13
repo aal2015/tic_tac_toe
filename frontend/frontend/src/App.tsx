@@ -1,21 +1,14 @@
 import { useEffect, useState } from "react";
 import Lobby from "./pages/Lobby";
 import AuthPage from "./pages/AuthPage";
-import { getSession, getAccountInfo } from "./services/nakama";
+import { isAuthenticated } from "./services/nakama";
+
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
 
   useEffect(() => {
-    const session = getSession();
-
-    if (!session || session.expires_at! * 1000 < Date.now()) {
-      localStorage.removeItem("session");
-      setIsAuth(false);
-      return;
-    }
-
-    setIsAuth(true);
+    setIsAuth(isAuthenticated());
   }, []);
 
   return (
