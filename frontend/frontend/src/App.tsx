@@ -1,10 +1,22 @@
-import { useState } from 'react'
-import Game from './pages/Game.js'
-import AuthPage from './pages/AuthPage.js'
-import './App.css'
+import { useEffect, useState } from "react";
+import Game from "./pages/Game";
+import AuthPage from "./pages/AuthPage";
+import { getSession } from "./services/nakama";
 
 function App() {
   const [isAuth, setIsAuth] = useState(false);
+
+  useEffect(() => {
+  const session = getSession();
+
+  if (!session || session.expires_at! * 1000 < Date.now()) {
+    localStorage.removeItem("session");
+    setIsAuth(false);
+    return;
+  }
+
+  setIsAuth(true);
+}, []);
 
   return (
     <>
@@ -14,7 +26,7 @@ function App() {
         <AuthPage onLogin={() => setIsAuth(true)} />
       )}
     </>
-  )
+  );
 }
 
-export default App
+export default App;
