@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { login, register } from "../services/nakama";
 
 type Mode = "login" | "register";
 
@@ -10,7 +11,7 @@ const AuthPage = ({ onLogin }: { onLogin: () => void }) => {
 
     const validate = () => {
         if (!username.trim()) return "Username is required";
-        if (password.length < 4) return "Password must be at least 4 characters";
+        if (password.length < 8) return "Password must be at least 4 characters";
         return "";
     };
 
@@ -22,8 +23,21 @@ const AuthPage = ({ onLogin }: { onLogin: () => void }) => {
             setError(validationError);
             return;
         }
-        
-        onLogin(); // tell App we are logged in
+
+        try {
+            if (mode === "login") {
+                await login(username, password);
+                console.log("Login:", username);
+            } else {
+                await register(username, password);
+                console.log("Register:", username);
+            }
+
+            onLogin();
+        } catch (err) {
+            console.log(err);
+            setError("Something went wrong");
+        }
     };
 
     return (<>
