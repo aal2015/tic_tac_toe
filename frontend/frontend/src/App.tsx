@@ -1,13 +1,18 @@
 import { useState } from 'react'
 import Game from './pages/Game.js'
+import AuthPage from './pages/AuthPage.js'
 import './App.css'
 
 function App() {
-  // const [count, setCount] = useState(0)
+  const [isAuth, setIsAuth] = useState(false);
 
   return (
     <>
-      <Game />
+      {isAuth ? (
+        <Game />
+      ) : (
+        <AuthPage onLogin={() => setIsAuth(true)} />
+      )}
     </>
   )
 }
