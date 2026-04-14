@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { login, register } from "../services/nakama";
 
 type Mode = "login" | "register";
@@ -8,6 +9,8 @@ const AuthPage = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+
+    let navigate = useNavigate();
 
     const validate = () => {
         if (!username.trim()) return "Username is required";
@@ -32,6 +35,7 @@ const AuthPage = () => {
                 console.log("Register:", username);
             }
 
+            navigate("/lobby");
         } catch (err) {
             console.log(err);
             setError("Something went wrong");
