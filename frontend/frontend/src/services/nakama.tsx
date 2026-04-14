@@ -22,11 +22,7 @@ export const login = async (
 
         // store session
         localStorage.setItem("session", JSON.stringify(session));
-
-        // connect socket
-        socket = client.createSocket();
-        await socket.connect(session, true);
-
+        
         return session;
     } catch (err: any) {
         throw new Error("Invalid username or password");
@@ -54,16 +50,27 @@ export const register = async (
         // store session
         localStorage.setItem("session", JSON.stringify(session));
 
-        // connect socket
-        socket = client.createSocket();
-        await socket.connect(session, true);
-
         return session;
     } catch (err: any) {
         console.log("Error:", err);
 
         throw new Error("Registration failed");
     }
+};
+
+// FETCH SOCKET CONNECTION
+export const ensureSocket = async () => {
+  if (socket) return socket;
+
+  const session = getSession();
+  if (!session) return null;
+
+  socket = client.createSocket();
+  await socket.connect(session, true);
+
+  console.log("Socket connected");
+
+  return socket;
 };
 
 // CHECK IF AUTHENTICATED
