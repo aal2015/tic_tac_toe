@@ -1,7 +1,10 @@
 {
   "files": [
-    "src/main.ts",
-    "src/healthcheck.ts"
+    "./node_modules/nakama-runtime/index.d.ts",
+    "./src/healthcheck.ts",
+    "./src/match.ts",
+    "./src/rpc.ts",
+    "./src/main.ts"
   ],
   "compilerOptions": {
     "target": "es5",
