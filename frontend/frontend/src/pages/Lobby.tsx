@@ -28,8 +28,7 @@ const Lobby = () => {
                 ticketRef.current = null;
 
                 try {
-                    const match = await socket.joinMatch(matched); // ✅ FIX
-
+                    const match = await socket.joinMatch(undefined, matched.token);
                     console.log("Joined match:", match);
 
                     navigate("/game", { state: { matchId: match.match_id } });
