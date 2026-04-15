@@ -1,0 +1,22 @@
+{
+  "files": [
+    "src/main.ts",
+  ],
+  "compilerOptions": {
+    "target": "es5",
+    "ignoreDeprecations": "6.0",
+    "typeRoots": [
+      "./node_modules"
+    ],
+    "types": [
+      "nakama-runtime"
+    ],
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "outFile": "./build/index.js",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
