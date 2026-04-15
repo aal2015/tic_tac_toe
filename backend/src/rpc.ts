@@ -1,14 +1,16 @@
-const moduleName = 'tic_tac_toe';
-
 function rpcFindMatch(
     ctx: nkruntime.Context,
     logger: nkruntime.Logger,
     nk: nkruntime.Nakama,
     payload: string
 ): string {
-    // Create a new authoritative match and return its ID to the client
-    var matchId = nk.matchCreate(moduleName, {});
-    logger.info('Match created with ID: %s', matchId);
 
-    return JSON.stringify({ matchIds: [matchId] });
+    // Create the authoritative match using your registered handler
+    const matchId = nk.matchCreate("tic_tac_toe", {});
+
+    logger.info("Match created: %s", matchId);
+
+    return JSON.stringify({
+        matchId: matchId
+    });
 }

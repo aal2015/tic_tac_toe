@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import AuthPage from "./pages/AuthPage";
 import { isAuthenticated } from "./services/nakama";
@@ -6,11 +6,26 @@ import { isAuthenticated } from "./services/nakama";
 function App() {
   const navigate = useNavigate();
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    if (isAuthenticated()) {
-      navigate("/lobby");
-    }
+    const checkAuth = async () => {
+      const result = await isAuthenticated();
+
+      if (result) {
+        navigate("/lobby");
+      }
+
+      setLoading(false);
+    };
+
+    checkAuth();
   }, [navigate]);
+
+  // ⏳ Prevent UI flicker while checking session
+  if (loading) {
+    return <p>Checking session...</p>;
+  }
 
   return <AuthPage />;
 }

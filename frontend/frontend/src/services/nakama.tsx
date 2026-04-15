@@ -1,5 +1,5 @@
-import { Client } from "@heroiclabs/nakama-js";
-import type { Session, Socket } from "@heroiclabs/nakama-js";
+import { Client, Session } from "@heroiclabs/nakama-js";
+import type { Socket } from "@heroiclabs/nakama-js";
 
 const client = new Client("defaultkey", "127.0.0.1", "7350", false);
 
@@ -22,7 +22,7 @@ export const login = async (
 
         // store session
         localStorage.setItem("session", JSON.stringify(session));
-        
+
         return session;
     } catch (err: any) {
         throw new Error("Invalid username or password");
@@ -60,32 +60,49 @@ export const register = async (
 
 // FETCH SOCKET CONNECTION
 export const ensureSocket = async () => {
-  if (socket) return socket;
+    if (socket) return socket;
 
-  const session = getSession();
-  if (!session) return null;
+    const session = getSession();
+    if (!session) return null;
 
-  socket = client.createSocket();
-  await socket.connect(session, true);
+    socket = client.createSocket();
+    await socket.connect(session, true);
 
-  console.log("Socket connected");
+    console.log("Socket connected");
 
-  return socket;
+    return socket;
 };
 
 // CHECK IF AUTHENTICATED
-export const isAuthenticated = () => {
-    const session = getSession();
+export const isAuthenticated = async () => {
+    let session = getSession();
 
     if (!session) return false;
 
-    const isValid = session.expires_at! * 1000 > Date.now();
+    console.log(session);
+    console.log(session.isexpired(Date.now() / 1000));
 
-    if (!isValid) {
-        localStorage.removeItem("session");
+    // ✅ If NOT expired → valid
+    if (!session.isexpired(Date.now() / 1000)) {
+        return true;
     }
 
-    return isValid;
+    // 🔄 Try refresh
+    try {
+        const newSession = await client.sessionRefresh(session);
+
+        localStorage.setItem("session", JSON.stringify({
+            token: newSession.token,
+            refresh_token: newSession.refresh_token
+        }));
+
+        return true;
+    } catch (e) {
+        console.info("Session expired and refresh failed");
+
+        localStorage.removeItem("session");
+        return false;
+    }
 };
 
 // GET ACCOUNT INFO
@@ -100,7 +117,16 @@ export const getAccountInfo = async (session: any) => {
 // GET SESSION
 export const getSession = (): Session | null => {
     const data = localStorage.getItem("session");
-    return data ? (JSON.parse(data) as Session) : null;
+    if (!data) return null;
+
+    const parsed = JSON.parse(data);
+
+    if (!parsed.token || !parsed.refresh_token) {
+        console.error("Invalid session data");
+        return null;
+    }
+
+    return Session.restore(parsed.token, parsed.refresh_token);
 };
 
 // GET SOCKET
@@ -113,3 +139,5 @@ export const logout = () => {
     localStorage.removeItem("session");
     socket = null;
 };
+
+export const getClient = () => client;

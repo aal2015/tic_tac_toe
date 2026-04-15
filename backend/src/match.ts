@@ -92,6 +92,8 @@ function matchJoin(
     state: nkruntime.MatchState,
     presences: nkruntime.Presence[]
 ): { state: nkruntime.MatchState } | null {
+    logger.info('Join Detected');
+
     var s = state as TicTacToeState;
 
     for (var i = 0; i < presences.length; i++) {
