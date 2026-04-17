@@ -1,6 +1,6 @@
 "use strict";
 function rpcHealthCheck(ctx, logger, nk, payload) {
-    logger.info('healtcheck rpc called');
+    logger.info('health check rpc called!');
     return JSON.stringify({ success: true });
 }
 // ─── Opcodes ────────────────────────────────────────────────────────────────
@@ -32,6 +32,13 @@ function checkWinner(board) {
     }
     return filled ? 3 : 0;
 }
+// Call this whenever state changes to keep matchList accurate
+function updateLabel(dispatcher, s) {
+    var label = JSON.stringify({
+        open: !s.gameOver && Object.keys(s.presences).length < 2 ? 1 : 0,
+    });
+    dispatcher.matchLabelUpdate(label);
+}
 // ─── matchInit ──────────────────────────────────────────────────────────────
 // Called once when the match is created via nk.matchCreate()
 function matchInit(ctx, logger, nk, params) {
@@ -47,7 +54,7 @@ function matchInit(ctx, logger, nk, params) {
     return {
         state: state,
         tickRate: 1, // 1 tick per second is enough for turn-based
-        label: 'tic-tac-toe',
+        label: JSON.stringify({ open: 1 }),
     };
 }
 // ─── matchJoinAttempt ───────────────────────────────────────────────────────
@@ -71,8 +78,9 @@ function matchJoin(ctx, logger, nk, dispatcher, tick, state, presences) {
         s.presences[presence.userId] = presence;
         logger.info('Player %s joined as mark %d', presence.userId, s.marks[presence.userId]);
     }
-    // Both players are in — broadcast game start with mark assignments
-    if (Object.keys(s.marks).length === 2) {
+    if (Object.keys(s.presences).length === 2) {
+        // Match is now full — close it from matchList
+        updateLabel(dispatcher, s);
         dispatcher.broadcastMessage(OP_CODE_START, JSON.stringify({
             marks: s.marks,
             board: s.board,
@@ -90,6 +98,10 @@ function matchLeave(ctx, logger, nk, dispatcher, tick, state, presences) {
         logger.info('Player %s left', userId);
         delete s.marks[userId];
         delete s.presences[userId];
+    }
+    // If game was already over, don't re-open the match
+    if (!s.gameOver) {
+        updateLabel(dispatcher, s);
     }
     return { state: s };
 }
@@ -142,9 +154,11 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
             // Game over
             s.gameOver = true;
             s.winner = result;
+            // Close the match from matchList immediately
+            updateLabel(dispatcher, s);
             dispatcher.broadcastMessage(OP_CODE_END, JSON.stringify({
                 board: s.board,
-                winner: result, // 1=p1 wins, 2=p2 wins, 3=draw
+                winner: result,
                 marks: s.marks,
             }));
             logger.info('Game over. Winner: %d', result);
@@ -171,15 +185,34 @@ function matchSignal(ctx, logger, nk, dispatcher, tick, state, data) {
 }
 var moduleName = 'tic_tac_toe';
 function rpcFindMatch(ctx, logger, nk, payload) {
-    // Create a new authoritative match and return its ID to the client
-    var matchId = nk.matchCreate(moduleName, {});
-    logger.info('Match created with ID: %s', matchId);
-    return JSON.stringify({ matchIds: [matchId] });
+    // Only find matches that have label open:1
+    // This excludes full matches and finished games
+    var matches = nk.matchList(10, true, // authoritative
+    null, // label: null — we use query instead
+    0, // minSize
+    1, // maxSize: not full
+    '+label.open:1' // query: only open matches
+    );
+    if (matches.length > 0) {
+        var matchId = matches[0].matchId;
+        logger.info('Found open match: %s', matchId);
+        return JSON.stringify({
+            matchIds: [matchId],
+            status: 'matched',
+        });
+    }
+    // No open match — create one
+    var newMatchId = nk.matchCreate(moduleName, {});
+    logger.info('Created new match: %s', newMatchId);
+    return JSON.stringify({
+        matchIds: [newMatchId],
+        status: 'waiting',
+    });
 }
 function InitModule(ctx, logger, nk, initializer) {
     // Register the healthcheck RPC
     initializer.registerRpc('healthcheck', rpcHealthCheck);
-    // Register the find_match RPC
+    // // Register the find_match RPC
     initializer.registerRpc('find_match', rpcFindMatch);
     // Register the match handler — name must match moduleName in rpc.ts
     initializer.registerMatch('tic_tac_toe', {

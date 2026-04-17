@@ -1,9 +1,9 @@
 // ─── Opcodes ────────────────────────────────────────────────────────────────
 // These numbers must match what your React client uses
-const OP_CODE_START  = 1;  // server → client: game started, marks assigned
+const OP_CODE_START = 1;  // server → client: game started, marks assigned
 const OP_CODE_UPDATE = 2;  // server → client: board state after a move
-const OP_CODE_END    = 3;  // server → client: game over with result
-const OP_CODE_MOVE   = 4;  // client → server: player submits a move
+const OP_CODE_END = 3;  // server → client: game over with result
+const OP_CODE_MOVE = 4;  // client → server: player submits a move
 
 // ─── State shape ────────────────────────────────────────────────────────────
 interface TicTacToeState {
@@ -36,6 +36,14 @@ function checkWinner(board: number[]): number {
     return filled ? 3 : 0;
 }
 
+// Call this whenever state changes to keep matchList accurate
+function updateLabel(dispatcher: nkruntime.MatchDispatcher, s: TicTacToeState) {
+    var label = JSON.stringify({
+        open: !s.gameOver && Object.keys(s.presences).length < 2 ? 1 : 0,
+    });
+    dispatcher.matchLabelUpdate(label);
+}
+
 // ─── matchInit ──────────────────────────────────────────────────────────────
 // Called once when the match is created via nk.matchCreate()
 function matchInit(
@@ -56,7 +64,7 @@ function matchInit(
     return {
         state,
         tickRate: 1,       // 1 tick per second is enough for turn-based
-        label: 'tic-tac-toe',
+        label: JSON.stringify({ open: 1 }),
     };
 }
 
@@ -92,8 +100,6 @@ function matchJoin(
     state: nkruntime.MatchState,
     presences: nkruntime.Presence[]
 ): { state: nkruntime.MatchState } | null {
-    logger.info('Join Detected');
-
     var s = state as TicTacToeState;
 
     for (var i = 0; i < presences.length; i++) {
@@ -104,8 +110,10 @@ function matchJoin(
         logger.info('Player %s joined as mark %d', presence.userId, s.marks[presence.userId]);
     }
 
-    // Both players are in — broadcast game start with mark assignments
-    if (Object.keys(s.marks).length === 2) {
+    if (Object.keys(s.presences).length === 2) {
+        // Match is now full — close it from matchList
+        updateLabel(dispatcher, s);
+
         dispatcher.broadcastMessage(OP_CODE_START, JSON.stringify({
             marks: s.marks,
             board: s.board,
@@ -134,6 +142,11 @@ function matchLeave(
         logger.info('Player %s left', userId);
         delete s.marks[userId];
         delete s.presences[userId];
+    }
+
+    // If game was already over, don't re-open the match
+    if (!s.gameOver) {
+        updateLabel(dispatcher, s);
     }
 
     return { state: s };
@@ -208,9 +221,13 @@ function matchLoop(
             // Game over
             s.gameOver = true;
             s.winner = result;
+
+            // Close the match from matchList immediately
+            updateLabel(dispatcher, s);
+
             dispatcher.broadcastMessage(OP_CODE_END, JSON.stringify({
                 board: s.board,
-                winner: result,   // 1=p1 wins, 2=p2 wins, 3=draw
+                winner: result,
                 marks: s.marks,
             }));
             logger.info('Game over. Winner: %d', result);
