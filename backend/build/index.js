@@ -189,7 +189,7 @@ function rpcFindMatch(ctx, logger, nk, payload) {
     // This excludes full matches and finished games
     var matches = nk.matchList(10, true, // authoritative
     null, // label: null — we use query instead
-    0, // minSize
+    1, // minSize
     1, // maxSize: not full
     '+label.open:1' // query: only open matches
     );
@@ -212,7 +212,7 @@ function rpcFindMatch(ctx, logger, nk, payload) {
 function InitModule(ctx, logger, nk, initializer) {
     // Register the healthcheck RPC
     initializer.registerRpc('healthcheck', rpcHealthCheck);
-    // // Register the find_match RPC
+    // Register the find_match RPC
     initializer.registerRpc('find_match', rpcFindMatch);
     // Register the match handler — name must match moduleName in rpc.ts
     initializer.registerMatch('tic_tac_toe', {

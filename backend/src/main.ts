@@ -7,7 +7,7 @@ function InitModule(
     // Register the healthcheck RPC
     initializer.registerRpc('healthcheck', rpcHealthCheck);
 
-    // // Register the find_match RPC
+    // Register the find_match RPC
     initializer.registerRpc('find_match', rpcFindMatch);
 
     // Register the match handler — name must match moduleName in rpc.ts

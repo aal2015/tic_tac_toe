@@ -13,7 +13,7 @@ function rpcFindMatch(
         10,
         true,           // authoritative
         null,           // label: null — we use query instead
-        0,              // minSize
+        1,              // minSize
         1,              // maxSize: not full
         '+label.open:1' // query: only open matches
     );
